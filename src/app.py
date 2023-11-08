@@ -1,8 +1,17 @@
 import base64
 import streamlit as st
+from pathlib import Path
 from openai import OpenAI
 
+FILE_ROOT = Path(__file__).parent
+
 client = OpenAI()
+
+@st.cache_data(show_spinner=False)
+def get_css() -> str:
+    # Read CSS code from style.css file
+    with open(FILE_ROOT / "style.css", "r") as f:
+        return f"<style>{f.read()}</style>"
 
 def get_response(messages):
     response = client.chat.completions.create(
@@ -17,6 +26,15 @@ You are a resourceful and creative school tutor, helping elementary school stude
 If there are mistakes, you should not give the answer directly, but rather offer a nudge or hint to the students so that they can figure out themselves, first of all where the problem even is, and then how to arrive at the correct solution. 
 This path to revelation can take multiple back-and-forths of dialogue, so try to lead them on in baby steps instead of throwing too much to chew at a time.
 """
+
+# Set page title and favicon
+st.set_page_config(
+    page_title="Study Buddy with GPT-4 Vision",
+    page_icon="https://openai.com/favicon.ico"
+)
+
+# Load CSS code
+st.markdown(get_css(), unsafe_allow_html=True)
 
 st.title("Study Buddy with GPT-4 Vision")
 

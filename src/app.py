@@ -32,16 +32,16 @@ if "messages" not in st.session_state:
             st.error("Please take a picture")
             st.stop()
 
-    user_content = [{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64.b64encode(image.read()).decode('utf-8')}", "detail": "high"}}]
-    if prompt:
-        user_content.append({"type": "text", "text": prompt})
+        user_content = [{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64.b64encode(image.read()).decode('utf-8')}", "detail": "high"}}]
+        if prompt:
+            user_content.append({"type": "text", "text": prompt})
 
-    st.session_state.messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_content}
-    ]
+        st.session_state.messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content}
+        ]
 
-    st.rerun()
+        st.rerun()
 
 # Displaying chat history so far
 

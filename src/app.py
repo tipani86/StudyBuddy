@@ -43,33 +43,38 @@ if "messages" not in st.session_state:
 
         st.rerun()
 
-# Displaying chat history so far
-
-for message in st.session_state.messages:
-    match message["role"]:
-        case "user":
-            with st.chat_message("user"):
-                if isinstance(message["content"], list):
-                    for content in message["content"]:
-                        match content["type"]:
-                            case "image_url":
-                                st.image(content["image_url"]["url"])
-                            case "text":
-                                st.markdown(content["text"])
-                else:   # string
-                    st.markdown(message["content"])
-        case "assistant":
-            with st.chat_message("assistant"):
-                st.markdown(message["content"])
-
-# If the last message is from the user, get the response and rerun, otherwise display a chat input widget
-
-if st.session_state.messages[-1]["role"] == "user":
-    with st.spinner("Thinking..."):
-        st.session_state.messages.append(get_response(st.session_state.messages))
-    st.rerun()
 else:
-    prompt = st.chat_input("Continue the conversation")
-    if prompt:
-        st.session_state.messages.append({"role": "user", "content": prompt})
+    # Displaying chat history so far
+    for message in st.session_state.messages:
+        match message["role"]:
+            case "user":
+                with st.chat_message("user"):
+                    if isinstance(message["content"], list):
+                        for content in message["content"]:
+                            match content["type"]:
+                                case "image_url":
+                                    st.image(content["image_url"]["url"])
+                                case "text":
+                                    st.markdown(content["text"])
+                    else:   # string
+                        st.markdown(message["content"])
+            case "assistant":
+                with st.chat_message("assistant"):
+                    st.markdown(message["content"])
+    
+    reset_button = st.button("Reset chat history")
+    if reset_button:
+        del st.session_state.messages
+        st.rerun
+
+    # If the last message is from the user, get the response and rerun, otherwise display a chat input widget
+
+    if st.session_state.messages[-1]["role"] == "user":
+        with st.spinner("Thinking..."):
+            st.session_state.messages.append(get_response(st.session_state.messages))
         st.rerun()
+    else:
+        prompt = st.chat_input("Continue the conversation")
+        if prompt:
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            st.rerun()

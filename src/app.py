@@ -42,7 +42,7 @@ if "messages" not in st.session_state:
 
     with st.form("Take a picture and add a comment (optional)", clear_on_submit=True):
         image = st.camera_input("Picture", label_visibility="collapsed")
-        prompt = st.text_input("Comment", label_visibility="collapsed", placeholder="Comment the picture (optional)")
+        prompt = st.text_input("Comment", label_visibility="collapsed", placeholder="Comment/ask about the picture (optional)")
         submit_button = st.form_submit_button(label="Send")
 
     if submit_button:

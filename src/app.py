@@ -44,6 +44,11 @@ if "messages" not in st.session_state:
         st.rerun()
 
 else:
+    reset_button = st.button("Reset chat history")
+    if reset_button:
+        del st.session_state.messages
+        st.rerun()
+
     # Displaying chat history so far
     for message in st.session_state.messages:
         match message["role"]:
@@ -59,13 +64,8 @@ else:
                     else:   # string
                         st.markdown(message["content"])
             case "assistant":
-                with st.chat_message("assistant"):
+                with st.chat_message("assistant", avatar="https://openai.com/favicon.ico"):
                     st.markdown(message["content"])
-    
-    reset_button = st.button("Reset chat history")
-    if reset_button:
-        del st.session_state.messages
-        st.rerun
 
     # If the last message is from the user, get the response and rerun, otherwise display a chat input widget
 

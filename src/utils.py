@@ -36,16 +36,26 @@ class AzureBlobOp:
         self,
         file: Path | bytes,
         blob_name: str,
-        container: str = os.getenv("AZURE_BLOB_CONTAINER", "test")
+        container: str = os.getenv("AZURE_BLOB_CONTAINER", "test"),
+        overwrite: bool = True
     ) -> tuple:
         '''upload blob'''
         res_status = 0
         res_message = "Success"
         res_url = None
 
+        c = self.connection_info
         with BlobServiceClient.from_connection_string(self.connection_string) as blob_service_client:
             try:
                 blob_client = blob_service_client.get_blob_client(container=container, blob=blob_name)
+                # If blob already exists and no overwrite is chosen, directly return
+                if blob_client.exists():
+                    if not overwrite:
+                        res_url = f"{c['DefaultEndpointsProtocol']}://{c['AccountName']}.blob.{c['EndpointSuffix']}/{container}/{blob_name}"
+                        return res_status, res_message, res_url
+                    else:
+                        # Remove the existing blob prior to uploading again
+                        blob_client.delete_blob()
                 if isinstance(file, Path):
                     with open(file, "rb") as data:
                         blob_client.upload_blob(data)
@@ -56,6 +66,5 @@ class AzureBlobOp:
                 raise
 
         # Add 'url' field to res which is the URL to the blob
-        c = self.connection_info
         res_url = f"{c['DefaultEndpointsProtocol']}://{c['AccountName']}.blob.{c['EndpointSuffix']}/{container}/{blob_name}"
         return res_status, res_message, res_url

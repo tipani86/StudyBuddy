@@ -1,2 +1,5 @@
-openai
+openai<1.0
+loguru
 streamlit
+azure-core
+azure-storage-blob>=12.9.0

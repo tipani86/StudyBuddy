@@ -96,11 +96,11 @@ if "messages" not in st.session_state:
             image_file = buffer.getvalue()
         image_hash = hashlib.md5(image_file).hexdigest()
         image_filename = f"{image_hash}.jpg"
-        upload_res = blob_op.upload_blob(image_file, image_filename)
-        if upload_res['status'] != 0:
-            st.error(f"Error uploading image: {upload_res['message']}")
+        status, message, url = blob_op.upload_blob(image_file, image_filename)
+        if status != 0:
+            st.error(f"Error uploading image: {message}")
             st.stop()
-        image_url = upload_res['url']
+        image_url = url
 
         user_content = [{"type": "image_url", "image_url": {"url": image_url, "detail": "high"}}]
         if prompt:

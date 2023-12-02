@@ -1,7 +1,8 @@
-import base64
+import json
 import hashlib
+import requests
 from utils import *
-from PIL import Image
+from PIL import Image, ImageDraw
 from io import BytesIO
 import streamlit as st
 from pathlib import Path
@@ -26,7 +27,7 @@ def get_response(messages):
         messages=messages,
         max_tokens=1500,
     )
-    return response.choices[0]
+    return response.choices[0].message
 
 system_prompt = """
 You are a resourceful and creative school tutor, helping elementary school students with their homework. You will be presented with a picture of some problem (or problems) along with their answer. You should identify whether everything is correct or if there are mistakes. 
@@ -139,7 +140,30 @@ else:
                         st.markdown(message["content"])
             case "assistant":
                 with st.chat_message("assistant", avatar="https://openai.com/favicon.ico"):
-                    st.markdown(message["content"])
+                    content = message["content"]
+                    if "IMAGE_RECTANGLES: " in content:
+                        content, image_rectangles = content.split("IMAGE_RECTANGLES: ", 1)
+                        image_rectangles = image_rectangles.strip()
+                        image_rectangles = json.loads(image_rectangles)
+                        # Load the uploaded image content from the first user message into memory
+                        first_user_message = st.session_state.messages[1] # Index 0 is system prompt
+                        # Go through the message content and find the image_url
+                        for item in first_user_message["content"]:
+                            if item["type"] == "image_url":
+                                # Load the image in PIL
+                                url = item["image_url"]["url"]
+                                img = Image.open(BytesIO(requests.get(url).content))
+                                # Draw the rectangles (each rectangle object is in the format {"top_left": {"x": 0.0, "y": 0.0}, "bottom_right": {"x": 0.0, "y": 0.0}, color: "#ff0000"})
+                                img_draw = ImageDraw.Draw(img)
+                                for rectangle in image_rectangles["rectangles"]:
+                                    top_left = (int(rectangle["top_left"]["x"] * img.width), int(rectangle["top_left"]["y"] * img.height))
+                                    bottom_right = (int(rectangle["bottom_right"]["x"] * img.width), int(rectangle["bottom_right"]["y"] * img.height))
+                                    color = rectangle["color"]
+                                    img_draw.rectangle([top_left, bottom_right], outline=color)
+                                # Render the processed image
+                                st.image(img)
+                                break
+                    st.markdown(content)
 
     # If the last message is from the user, get the response and rerun, otherwise display a chat input widget
 

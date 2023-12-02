@@ -1,5 +1,6 @@
 openai<1.0
 loguru
+requests
 streamlit
 azure-core
 azure-storage-blob>=12.9.0

@@ -1,5 +1,6 @@
 import time
 import json
+import random
 import hashlib
 import requests
 from utils import *
@@ -30,6 +31,20 @@ def get_response(messages):
     )
     return response.choices[0].message
 
+# Automatically scroll to bottom of page
+js = f"""
+<script>
+    function scroll(dummy_var_to_force_repeat_execution){{
+        const streamlitDoc = window.parent.document;
+        // Find the last div element with data-testid="stChatMessageContent" and scroll to it
+        const chatMessages = streamlitDoc.querySelectorAll('[data-testid="stChatMessageContent"]');
+        const lastMessage = chatMessages[chatMessages.length - 1];
+        lastMessage.scrollIntoView({{behavior: "smooth"}});
+    }}
+    scroll({random.randint(1, 10000)})
+</script>
+"""
+
 system_prompt = """
 You are an expert, resourceful and creative school tutor, helping elementary school students with their homework. You will be presented with a picture of some problem (or problems), and sometimes with their answer. 
 Start by carefully analyzing the image. Remember, you are equipped with all the necessary expert knowledge to solve whatever problem is presented in the image. 
@@ -37,13 +52,14 @@ If you see that the student has answered, first determine if the student's reaso
 If there are mistakes, you should not give the answer directly, but rather offer a nudge or hint to the students so that they can figure out themselves, first of all where the problem even is, and then how to arrive at the correct solution. 
 Break down the problem into simpler steps of inference and deduction, and then guide the student through the steps to arrive at the correct answer. 
 This path to revelation can take multiple back-and-forths of dialogue, so try to lead them on in baby steps instead of throwing too much to chew at a time. 
-If you want to highlight one or several areas of the image as part your response (especially if there are potential issues you identified earlier), add a text section AT HE VERY END OF YOUR RESPONSE, starting with 'IMAGE_RECTANGLES: ' (always in English, plural and capitalized), followed by a standard JSON array of objects, as in below example:
+If you want to highlight one or several areas of the image as part your response (especially if there are potential issues you identified earlier), add a text section AT HE VERY END OF YOUR RESPONSE, starting with 'IMAGE_RECTANGLES: ' (always in English, plural and capitalized), followed by a standard JSON format, as in below example:
 IMAGE_RECTANGLES: {
     "rectangles": [
-        {"top_left": {"x": 0.5, "y": 0.5}, "bottom_right": {"x": 0.7, "y": 0.7}, color: "#ff0000"}
+        {"top_left": {"x": 0.5, "y": 0.5}, "bottom_right": {"x": 0.7, "y": 0.7}, color: "#ff0000"},
+        {"top_left": {"x": 0.8, "y": 0.3}, "bottom_right": {"x": 0.9, "y": 0.5}, color: "#00ff00"}
     ]
 } 
-The coordinates are normalized to relative positions in the image, with (0, 0) being the top left corner and (1, 1) being the bottom right corner. The color is a standard CSS color string. Take time to analyze the image carefully before deciding the coordinates to make them as accurate as possible. 
+Note that the coordinates are normalized to relative positions in the image, with (0, 0) being the top left corner and (1, 1) being the bottom right corner. The color is a standard CSS color string. Take time to analyze the image carefully before deciding the coordinates to make them as accurate as possible. However, stick to the standard JSON format, and do not add any other fields or comments to it. 
 """
 
 # Set page title and favicon
@@ -191,6 +207,7 @@ else:
 
     if st.session_state.messages[-1]["role"] == "user":
         with st.spinner("Thinking..."):
+            st.components.v1.html(js, height=0)
             st.session_state.messages.append(get_response(st.session_state.messages))
         st.rerun()
     else:
@@ -203,7 +220,6 @@ else:
             with chat_history:
                 with st.chat_message("user"):
                     st.markdown(prompt)
-                with st.spinner("Thinking..."):
-                    time.sleep(0.5)
+                st.components.v1.html(js, height=0)
             st.session_state.messages.append({"role": "user", "content": prompt})
             st.rerun()

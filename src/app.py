@@ -1,3 +1,4 @@
+import time
 import json
 import hashlib
 import requests
@@ -204,5 +205,11 @@ else:
                 submitted = st.form_submit_button(label="Send")
         if submitted and len(prompt) > 0:
             prompt_box.empty()
+            with chat_history:
+                with st.chat_message("user"):
+                    st.markdown(prompt)
+                with st.chat_message("assistant", avatar="https://openai.com/favicon.ico"):
+                    with st.spinner("Thinking..."):
+                        time.sleep(0.5)
             st.session_state.messages.append({"role": "user", "content": prompt})
             st.rerun()

@@ -35,14 +35,16 @@ If there are mistakes, you should not give the answer directly, but rather offer
 This path to revelation can take multiple back-and-forths of dialogue, so try to lead them on in baby steps instead of throwing too much to chew at a time.
 """
 system_prompt = """
-You are an expert, resourceful and creative school tutor. You are helping elementary school students with their homework. You will be presented with a problem (or problems) of some sorts. 
-If you are also presented with an image, start by carefully analyzing the image. Remember, you are equipped with all the necessary expert knowledge to solve whatever problem is presented in the image. 
+You are an expert, resourceful and creative school tutor, helping elementary school students with their homework. You will be presented with a picture of some problem (or problems), and sometimes with their answer. 
+Start by carefully analyzing the image. Remember, you are equipped with all the necessary expert knowledge to solve whatever problem is presented in the image. 
 If you see that the student has answered, first determine if the student's reasoning is sound and the answer is correct. 
+If there are mistakes, you should not give the answer directly, but rather offer a nudge or hint to the students so that they can figure out themselves, first of all where the problem even is, and then how to arrive at the correct solution. 
 Break down the problem into simpler steps of inference and deduction, and then guide the student through the steps to arrive at the correct answer. 
-If there is an image and you want to highlight one or several areas of the image, as part of and referred in your response, add a text section at the very end of your reply, starting with 'IMAGE_RECTANGLES: ' (always in plural and capitalized), followed by a standard JSON array of objects, as follows:
+This path to revelation can take multiple back-and-forths of dialogue, so try to lead them on in baby steps instead of throwing too much to chew at a time. 
+If you want to highlight one or several areas of the image as part your response, add a text section at the very end of your reply, starting with 'IMAGE_RECTANGLES: ' (always in English, plural and capitalized), followed by a standard JSON array of objects, as in below example:
 IMAGE_RECTANGLES: {
     "rectangles": [
-        {"top_left": {"x": 0.0, "y": 0.0}, "bottom_right": {"x": 0.0, "y": 0.0}, color: "#ff0000"}
+        {"top_left": {"x": 0.5, "y": 0.5}, "bottom_right": {"x": 0.7, "y": 0.7}, color: "#ff0000"}
     ]
 } 
 The coordinates are normalized to relative positions in the image, with (0, 0) being the top left corner and (1, 1) being the bottom right corner. The color is a standard CSS color string.
@@ -58,13 +60,17 @@ st.set_page_config(
 st.markdown(get_css(), unsafe_allow_html=True)
 
 st.title("Study Buddy with GPT-4 Vision")
+chat_history = st.container()
+st.write("")
+prompt_box = st.empty()
 
 if "messages" not in st.session_state:
 
-    with st.form("Take a picture and add a comment (optional)", clear_on_submit=True):
-        image = st.camera_input("Picture", label_visibility="collapsed")
-        prompt = st.text_input("Comment", label_visibility="collapsed", placeholder="Comment/ask about the picture (optional)")
-        submit_button = st.form_submit_button(label="Send")
+    with chat_history:
+        with st.form("Take a picture and add a comment (optional)", clear_on_submit=True):
+            image = st.camera_input("Picture", label_visibility="collapsed")
+            prompt = st.text_input("Comment", label_visibility="collapsed", placeholder="Comment/ask about the picture (optional)")
+            submit_button = st.form_submit_button(label="Send")
 
     if submit_button:
         if not image:
@@ -115,55 +121,52 @@ if "messages" not in st.session_state:
         st.rerun()
 
 else:
-    reset_button = st.button("Reset chat history")
-    if reset_button:
-        del st.session_state.messages
-        st.rerun()
+    with chat_history:
+        reset_button = st.button("Reset chat history")
+        if reset_button:
+            del st.session_state.messages
+            st.rerun()
 
-    with st.sidebar:
-        st.write("Messages")
-        st.json(st.session_state.messages, expanded=True)
-
-    # Displaying chat history so far
-    for message in st.session_state.messages:
-        match message["role"]:
-            case "user":
-                with st.chat_message("user"):
-                    if isinstance(message["content"], list):
-                        for content in message["content"]:
-                            match content["type"]:
-                                case "image_url":
-                                    st.image(content["image_url"]["url"])
-                                case "text":
-                                    st.markdown(content["text"])
-                    else:   # string
-                        st.markdown(message["content"])
-            case "assistant":
-                with st.chat_message("assistant", avatar="https://openai.com/favicon.ico"):
-                    content = message["content"]
-                    if "IMAGE_RECTANGLES: " in content:
-                        content, image_rectangles = content.split("IMAGE_RECTANGLES: ", 1)
-                        image_rectangles = image_rectangles.strip()
-                        image_rectangles = json.loads(image_rectangles)
-                        # Load the uploaded image content from the first user message into memory
-                        first_user_message = st.session_state.messages[1] # Index 0 is system prompt
-                        # Go through the message content and find the image_url
-                        for item in first_user_message["content"]:
-                            if item["type"] == "image_url":
-                                # Load the image in PIL
-                                url = item["image_url"]["url"]
-                                img = Image.open(BytesIO(requests.get(url).content))
-                                # Draw the rectangles (each rectangle object is in the format {"top_left": {"x": 0.0, "y": 0.0}, "bottom_right": {"x": 0.0, "y": 0.0}, color: "#ff0000"})
-                                img_draw = ImageDraw.Draw(img)
-                                for rectangle in image_rectangles["rectangles"]:
-                                    top_left = (int(rectangle["top_left"]["x"] * img.width), int(rectangle["top_left"]["y"] * img.height))
-                                    bottom_right = (int(rectangle["bottom_right"]["x"] * img.width), int(rectangle["bottom_right"]["y"] * img.height))
-                                    color = rectangle["color"]
-                                    img_draw.rectangle([top_left, bottom_right], outline=color)
-                                # Render the processed image
-                                st.image(img)
-                                break
-                    st.markdown(content)
+        # Displaying chat history so far
+        for message in st.session_state.messages:
+            match message["role"]:
+                case "user":
+                    with st.chat_message("user"):
+                        if isinstance(message["content"], list):
+                            for content in message["content"]:
+                                match content["type"]:
+                                    case "image_url":
+                                        st.image(content["image_url"]["url"])
+                                    case "text":
+                                        st.markdown(content["text"])
+                        else:   # string
+                            st.markdown(message["content"])
+                case "assistant":
+                    with st.chat_message("assistant", avatar="https://openai.com/favicon.ico"):
+                        content = message["content"]
+                        if "IMAGE_RECTANGLES: " in content:
+                            content, image_rectangles = content.split("IMAGE_RECTANGLES: ", 1)
+                            image_rectangles = image_rectangles.strip()
+                            image_rectangles = json.loads(image_rectangles)
+                            # Load the uploaded image content from the first user message into memory
+                            first_user_message = st.session_state.messages[1] # Index 0 is system prompt
+                            # Go through the message content and find the image_url
+                            for item in first_user_message["content"]:
+                                if item["type"] == "image_url":
+                                    # Load the image in PIL
+                                    url = item["image_url"]["url"]
+                                    img = Image.open(BytesIO(requests.get(url).content))
+                                    # Draw the rectangles (each rectangle object is in the format {"top_left": {"x": 0.0, "y": 0.0}, "bottom_right": {"x": 0.0, "y": 0.0}, color: "#ff0000"})
+                                    img_draw = ImageDraw.Draw(img)
+                                    for rectangle in image_rectangles["rectangles"]:
+                                        top_left = (int(rectangle["top_left"]["x"] * img.width), int(rectangle["top_left"]["y"] * img.height))
+                                        bottom_right = (int(rectangle["bottom_right"]["x"] * img.width), int(rectangle["bottom_right"]["y"] * img.height))
+                                        color = rectangle["color"]
+                                        img_draw.rectangle([top_left, bottom_right], outline=color)
+                                    # Render the processed image
+                                    st.image(img)
+                                    break
+                        st.markdown(content)
 
     # If the last message is from the user, get the response and rerun, otherwise display a chat input widget
 
@@ -172,7 +175,10 @@ else:
             st.session_state.messages.append(get_response(st.session_state.messages))
         st.rerun()
     else:
-        prompt = st.chat_input("Continue the conversation")
-        if prompt:
+        with prompt_box:
+            with st.form("Text input", clear_on_submit=True):
+                prompt = st.text_area("Continue the conversation", key=f"text_input_{len(st.session_state.messages)}")
+                submitted = st.form_submit_button(label="Send")
+        if submitted and len(prompt) > 0:
             st.session_state.messages.append({"role": "user", "content": prompt})
             st.rerun()

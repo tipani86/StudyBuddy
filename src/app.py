@@ -134,7 +134,7 @@ if "messages" not in st.session_state:
             st.stop()
         image_url = url
 
-        user_content = [{"type": "image_url", "image_url": {"url": image_url, "detail": "auto"}}]
+        user_content = [{"type": "image_url", "image_url": {"url": image_url, "detail": "high"}}]
         if prompt:
             user_content.append({"type": "text", "text": prompt})
 
@@ -215,11 +215,11 @@ else:
             with st.form("Text input", clear_on_submit=True):
                 prompt = st.text_area("Continue the conversation", key=f"text_input_{len(st.session_state.messages)}")
                 submitted = st.form_submit_button(label="Send")
+            st.components.v1.html(js, height=0)
         if submitted and len(prompt) > 0:
             prompt_box.empty()
             with chat_history:
                 with st.chat_message("user"):
                     st.markdown(prompt)
-                st.components.v1.html(js, height=0)
             st.session_state.messages.append({"role": "user", "content": prompt})
             st.rerun()

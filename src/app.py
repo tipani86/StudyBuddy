@@ -208,8 +208,7 @@ else:
             with chat_history:
                 with st.chat_message("user"):
                     st.markdown(prompt)
-                with st.chat_message("assistant", avatar="https://openai.com/favicon.ico"):
-                    with st.spinner("Thinking..."):
-                        time.sleep(0.5)
+                with st.spinner("Thinking..."):
+                    time.sleep(0.5)
             st.session_state.messages.append({"role": "user", "content": prompt})
             st.rerun()

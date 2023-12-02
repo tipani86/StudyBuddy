@@ -56,6 +56,14 @@ st.set_page_config(
     page_icon="https://openai.com/favicon.ico"
 )
 
+# Get query parameters
+query_params = st.experimental_get_query_params()
+if "debug" in query_params and query_params["debug"][0].lower() == "true":
+    st.session_state.DEBUG = True
+
+if "DEBUG" in st.session_state and st.session_state.DEBUG:
+    DEBUG = True
+
 # Load CSS code
 st.markdown(get_css(), unsafe_allow_html=True)
 
@@ -121,6 +129,13 @@ if "messages" not in st.session_state:
         st.rerun()
 
 else:
+
+    if DEBUG:
+        with st.sidebar:
+            st.subheader("DEBUG")
+            st.write("Messages")
+            st.json(st.session_state.messages)
+
     with chat_history:
         reset_button = st.button("Reset chat history")
         if reset_button:
@@ -180,5 +195,6 @@ else:
                 prompt = st.text_area("Continue the conversation", key=f"text_input_{len(st.session_state.messages)}")
                 submitted = st.form_submit_button(label="Send")
         if submitted and len(prompt) > 0:
+            prompt_box.empty()
             st.session_state.messages.append({"role": "user", "content": prompt})
             st.rerun()

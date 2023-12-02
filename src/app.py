@@ -166,6 +166,10 @@ else:
                         if "IMAGE_RECTANGLES: " in content:
                             content, image_rectangles = content.split("IMAGE_RECTANGLES: ", 1)
                             image_rectangles = image_rectangles.strip()
+                            if len(image_rectangles.split("}", 1)) == 2:
+                                image_rectangles, contents_post = image_rectangles.split("}", 1)
+                                image_rectangles += "}"
+                                content += f"\n{contents_post}"
                             image_rectangles = json.loads(image_rectangles)
                             # Load the uploaded image content from the first user message into memory
                             first_user_message = st.session_state.messages[1] # Index 0 is system prompt

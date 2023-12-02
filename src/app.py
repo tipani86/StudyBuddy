@@ -64,6 +64,7 @@ if "debug" in query_params and query_params["debug"][0].lower() == "true":
 if "DEBUG" in st.session_state and st.session_state.DEBUG:
     DEBUG = True
 
+
 # Load CSS code
 st.markdown(get_css(), unsafe_allow_html=True)
 
@@ -71,6 +72,10 @@ st.title("Study Buddy with GPT-4 Vision")
 chat_history = st.container()
 st.write("")
 prompt_box = st.empty()
+
+if DEBUG:
+    with st.sidebar:
+        st.subheader("DEBUG")
 
 if "messages" not in st.session_state:
 
@@ -132,7 +137,6 @@ else:
 
     if DEBUG:
         with st.sidebar:
-            st.subheader("DEBUG")
             st.write("Messages")
             st.json(st.session_state.messages)
 

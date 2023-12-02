@@ -215,7 +215,7 @@ else:
             with st.form("Text input", clear_on_submit=True):
                 prompt = st.text_area("Continue the conversation", key=f"text_input_{len(st.session_state.messages)}")
                 submitted = st.form_submit_button(label="Send")
-            st.components.v1.html(js, height=0)
+        st.components.v1.html(js, height=0)
         if submitted and len(prompt) > 0:
             prompt_box.empty()
             with chat_history:

@@ -43,7 +43,7 @@ IMAGE_RECTANGLES: {
         {"top_left": {"x": 0.5, "y": 0.5}, "bottom_right": {"x": 0.7, "y": 0.7}, color: "#ff0000"}
     ]
 } 
-The coordinates are normalized to relative positions in the image, with (0, 0) being the top left corner and (1, 1) being the bottom right corner. The color is a standard CSS color string.
+The coordinates are normalized to relative positions in the image, with (0, 0) being the top left corner and (1, 1) being the bottom right corner. The color is a standard CSS color string. Take time to analyze the image carefully before deciding the coordinates to make them as accurate as possible. 
 """
 
 # Set page title and favicon
@@ -118,7 +118,7 @@ if "messages" not in st.session_state:
             st.stop()
         image_url = url
 
-        user_content = [{"type": "image_url", "image_url": {"url": image_url, "detail": "high"}}]
+        user_content = [{"type": "image_url", "image_url": {"url": image_url, "detail": "auto"}}]
         if prompt:
             user_content.append({"type": "text", "text": prompt})
 

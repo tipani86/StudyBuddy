@@ -119,6 +119,10 @@ else:
         del st.session_state.messages
         st.rerun()
 
+    with st.sidebar:
+        st.write("Messages")
+        st.json(st.session_state.messages, expanded=True)
+
     # Displaying chat history so far
     for message in st.session_state.messages:
         match message["role"]:

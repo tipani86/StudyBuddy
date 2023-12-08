@@ -92,15 +92,21 @@ if DEBUG:
 if "messages" not in st.session_state:
 
     with chat_history:
-        with st.form("Take a picture and add a comment (optional)", clear_on_submit=True):
-            image = st.camera_input("Picture", label_visibility="collapsed")
+        with st.form("Upload or take a picture and add a comment (optional)", clear_on_submit=True):
+            upload_tab, camera_tab = st.tabs(["Upload", "Camera"])
+            with upload_tab:
+                image = st.file_uploader("Picture", type=["jpg", "jpeg", "png"], accept_multiple_files=False, label_visibility="collapsed")
+            with camera_tab:
+                photo = st.camera_input("Picture", label_visibility="collapsed")
             prompt = st.text_input("Comment", label_visibility="collapsed", placeholder="Comment/ask about the picture (optional)")
             submit_button = st.form_submit_button(label="Send")
 
     if submit_button:
-        if not image:
-            st.error("Please take a picture")
+        if not (image or photo):
+            st.error("Please upload or take a picture")
             st.stop()
+
+        image = image if image else photo
 
         image_url = None
         # Load the image in PIL and resize so the long side is less than 2,000 px and short side less than 768 px, whichever limit comes first
